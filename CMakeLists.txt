@@ -53,6 +53,7 @@ target_link_libraries(PandarGeneral
     ${PCL_IO_LIBRARIES}
     pcap
 )
+add_dependencies(PandarGeneral ${catkin_EXPORTED_TARGETS})
 
 ###PandarGeneralSDK
 add_library(PandarGeneralSDK SHARED
@@ -60,6 +61,7 @@ add_library(PandarGeneralSDK SHARED
     src/HesaiLidar_General_SDK/src/tcp_command_client.c
     src/HesaiLidar_General_SDK/src/util.c
 )
+
 target_include_directories(PandarGeneralSDK PRIVATE
     src/HesaiLidar_General_SDK/
     src/HesaiLidar_General_SDK/include/
@@ -78,6 +80,8 @@ target_link_libraries(PandarGeneralSDK
     ${catkin_LIBRARIES}
     pcap
 )
+
+add_dependencies(PandarGeneralSDK ${catkin_EXPORTED_TARGETS})
 
 ###hesai node
 add_executable(hesai_lidar_node
