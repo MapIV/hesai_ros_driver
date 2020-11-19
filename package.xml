@@ -19,4 +19,5 @@
   <depend>libpcl-all-dev</depend>
   <depend>image_transport</depend>
   <depend>pcl_conversions</depend>
+  <depend>libpcap</depend>
 </package>
