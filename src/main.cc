@@ -29,7 +29,6 @@ private:
   ros::Publisher lidar_publisher_;
   ros::Publisher packet_publisher_;
   PandarGeneralSDK *pandar_sdk_ptr_;
-  std::string publish_type_;
   std::string timestamp_type_;
   ros::Subscriber packet_subscriber_;
   bool use_rosbag_;
@@ -58,7 +57,6 @@ public:
     private_handle.getParam("lidar_correction_file", lidar_correction_file);
     private_handle.getParam("lidar_type", lidar_type);
     private_handle.getParam("pcldata_type", pcl_data_type);
-    private_handle.getParam("publish_type", publish_type_);
     private_handle.getParam("timestamp_type", timestamp_type_);
     private_handle.param<bool>("use_rosbag", use_rosbag_, false);
 
