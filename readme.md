@@ -17,6 +17,7 @@ roslaunch hesai_lidar pandar_40p.launch lidar_ip:=XXX.XXX.XXX.XXX
 roslaunch hesai_lidar pandar_40m.launch lidar_ip:=XXX.XXX.XXX.XXX
 roslaunch hesai_lidar pandar_20a.launch lidar_ip:=XXX.XXX.XXX.XXX
 roslaunch hesai_lidar pandar_20b.launch lidar_ip:=XXX.XXX.XXX.XXX
+roslaunch hesai_lidar pandar_qt.launch lidar_ip:=XXX.XXX.XXX.XXX
 roslaunch hesai_lidar pandar_xt16.launch lidar_ip:=XXX.XXX.XXX.XXX
 roslaunch hesai_lidar pandar_xt32.launch lidar_ip:=XXX.XXX.XXX.XXX
 ```
