@@ -1,7 +1,7 @@
 stages:
   - build
 
-aisin_build:
+test_build:
   stage: build
   image: ros:melodic-perception
   script:
