@@ -53,7 +53,7 @@ target_link_libraries(PandarGeneral
     ${PCL_IO_LIBRARIES}
     pcap
 )
-add_dependencies(PandarGeneral ${catkin_EXPORTED_TARGETS})
+add_dependencies(PandarGeneral ${catkin_EXPORTED_TARGETS} hesai_lidar_generate_messages_cpp)
 
 ###PandarGeneralSDK
 add_library(PandarGeneralSDK SHARED
@@ -81,7 +81,7 @@ target_link_libraries(PandarGeneralSDK
     pcap
 )
 
-add_dependencies(PandarGeneralSDK ${catkin_EXPORTED_TARGETS})
+add_dependencies(PandarGeneralSDK ${catkin_EXPORTED_TARGETS} hesai_lidar_generate_messages_cpp)
 
 ###hesai node
 add_executable(hesai_lidar_node
