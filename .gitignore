@@ -40,3 +40,11 @@ xt-pcap
 
 .catkin_workspace
 devel
+
+
+.catkin_tools/
+build/
+devel/
+logs/
+.idea/
+cmake-build-debug/
