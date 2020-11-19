@@ -1,4 +1,35 @@
-[![Build Status](https://travis-ci.org/amc-nu/HesaiLidar_Pandar64_ros.svg?branch=master)](https://travis-ci.org/amc-nu/HesaiLidar_Pandar64_ros)
+# Hesai Lidar driver
+[![pipeline status](https://gitlab.com/perceptionengine/pe-drivers/hesai_lidar/badges/master/pipeline.svg)](https://gitlab.com/perceptionengine/pe-drivers/hesai_lidar/-/commits/master)
+
+### How to compile
+
+```
+$ mkdir hesai_ws/src -p && cd hesai_ws/src
+$ git clone https://gitlab.com/perceptionengine/pe-drivers/hesai_lidar.git && cd ..
+$ rosdep install --from-paths src --ignore-src -r -y
+$ catkin build
+```
+
+### How to launch
+```
+roslaunch hesai_lidar pandar_64.launch lidar_ip:=XXX.XXX.XXX.XXX
+roslaunch hesai_lidar pandar_40p.launch lidar_ip:=XXX.XXX.XXX.XXX
+roslaunch hesai_lidar pandar_40m.launch lidar_ip:=XXX.XXX.XXX.XXX
+roslaunch hesai_lidar pandar_20a.launch lidar_ip:=XXX.XXX.XXX.XXX
+roslaunch hesai_lidar pandar_20b.launch lidar_ip:=XXX.XXX.XXX.XXX
+roslaunch hesai_lidar pandar_xt16.launch lidar_ip:=XXX.XXX.XXX.XXX
+roslaunch hesai_lidar pandar_xt32.launch lidar_ip:=XXX.XXX.XXX.XXX
+```
+
+### How to use pandar_packets
+
+```
+$ rosbag record /pandar_packets
+$ rosbag play file.bag 
+$ roslaunch hesai_lidar pandar_XX.launch use_rosbag:=true
+```
+
+---
 
 # HesaiLidar_General_ROS
 
