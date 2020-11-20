@@ -6,23 +6,6 @@
 #include <pcl/point_types.h>
 #include "pandarGeneral_sdk/pandarGeneral_sdk.h"
 
-ros::Time resolveHourAmbiguity(const ros::Time &stamp, const ros::Time &nominal_stamp)
-{
-  const int HALFHOUR_TO_SEC = 1800;
-  ros::Time retval = stamp;
-  if (nominal_stamp.sec > stamp.sec)
-  {
-    if (nominal_stamp.sec - stamp.sec > HALFHOUR_TO_SEC)
-    {
-      retval.sec = retval.sec + 2 * HALFHOUR_TO_SEC;
-    }
-  } else if (stamp.sec - nominal_stamp.sec > HALFHOUR_TO_SEC)
-  {
-    retval.sec = retval.sec - 2 * HALFHOUR_TO_SEC;
-  }
-  return retval;
-}
-
 class HesaiLidarClient
 {
 private:
@@ -143,6 +126,7 @@ public:
 
     if (!use_rosbag_)
     {
+      scan->header = output.header;
       packet_publisher_.publish(scan);
     }
 
@@ -151,6 +135,23 @@ public:
   void scanCallback(const hesai_lidar::PandarScanPtr scan)
   {
     pandar_sdk_ptr_->PushScanPacket(scan);
+  }
+
+  ros::Time resolveHourAmbiguity(const ros::Time &stamp, const ros::Time &nominal_stamp)
+  {
+    const int HALFHOUR_TO_SEC = 1800;
+    ros::Time retval = stamp;
+    if (nominal_stamp.sec > stamp.sec)
+    {
+      if (nominal_stamp.sec - stamp.sec > HALFHOUR_TO_SEC)
+      {
+        retval.sec = retval.sec + 2 * HALFHOUR_TO_SEC;
+      }
+    } else if (stamp.sec - nominal_stamp.sec > HALFHOUR_TO_SEC)
+    {
+      retval.sec = retval.sec - 2 * HALFHOUR_TO_SEC;
+    }
+    return retval;
   }
 };
 
