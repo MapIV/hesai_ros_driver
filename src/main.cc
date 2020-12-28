@@ -47,7 +47,7 @@ public:
     {
       pandar_sdk_ptr_ = new PandarGeneralSDK(pcap_file, boost::bind(&HesaiLidarClient::lidarCallback, this, _1, _2, _3), \
       static_cast<int>(start_angle * 100 + 0.5), 0, pcl_data_type, lidar_type, timestamp_type_);
-      if (pandar_sdk_ptr_ != NULL)
+      if (pandar_sdk_ptr_ != NULL && !lidar_correction_file.empty())
       {
         std::ifstream fin(lidar_correction_file);
         int length = 0;
@@ -70,7 +70,7 @@ public:
 
       pandar_sdk_ptr_ = new PandarGeneralSDK("", boost::bind(&HesaiLidarClient::lidarCallback, this, _1, _2, _3), \
       static_cast<int>(start_angle * 100 + 0.5), 0, pcl_data_type, lidar_type, timestamp_type_);
-      if (pandar_sdk_ptr_ != NULL)
+      if (pandar_sdk_ptr_ != NULL && !lidar_correction_file.empty())
       {
         std::ifstream fin(lidar_correction_file);
         int length = 0;
