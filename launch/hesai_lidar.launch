@@ -9,7 +9,7 @@
 	<arg name="publish_type" default="both"/>
 	<arg name="timestamp_type" default=""/>
 	<arg name="use_rosbag" default="true"/>
-	<arg name="lidar_correction_file"  default="$(find hesai_lidar)/config/correction.csv"/>
+	<arg name="lidar_correction_file"  default=""/>
 
 	<node pkg="hesai_lidar" name="$(anon hesai_lidar)" type="hesai_lidar_node" output="screen" >
 		<param name="pcap_file" type="string" value="$(arg pcap_file)"/>
