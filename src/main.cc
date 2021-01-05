@@ -15,6 +15,7 @@ private:
   std::string timestamp_type_;
   ros::Subscriber packet_subscriber_;
   bool use_rosbag_;
+  std::string frame_id_;
 
 public:
   HesaiLidarClient()
@@ -42,6 +43,7 @@ public:
     private_handle.getParam("pcldata_type", pcl_data_type);
     private_handle.getParam("timestamp_type", timestamp_type_);
     private_handle.param<bool>("use_rosbag", use_rosbag_, false);
+    private_handle.param<std::string>("frame_id", frame_id_, lidar_type);
 
     if (!pcap_file.empty())
     {
@@ -122,6 +124,7 @@ public:
 
     sensor_msgs::PointCloud2 output;
     pcl::toROSMsg(*cld, output);
+    output.header.frame_id = frame_id_;
     lidar_publisher_.publish(output);
 
     if (!use_rosbag_)
