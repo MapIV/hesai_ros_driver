@@ -14,17 +14,17 @@
 	<arg name="frame_id" default="hesai"/>
 
 	<node pkg="hesai_lidar" name="$(anon hesai_lidar)" type="hesai_lidar_node" output="screen" >
-		<param name="pcap_file" type="string" value="$(arg pcap_file)"/>
-		<param name="lidar_ip" type="string" value="$(arg lidar_ip)"/>
-		<param name="lidar_recv_port"  type="int" value="$(arg lidar_recv_port)"/>
-		<param name="gps_port"  type="int" value="$(arg gps_port)"/>
-		<param name="start_angle"  type="double" value="$(arg start_angle)"/>
-		<param name="lidar_type"  type="string" value="$(arg lidar_type)"/>
-		<param name="pcldata_type"  type="int" value="$(arg pcldata_type)"/>
-		<param name="timestamp_type"  type="string" value="$(arg timestamp_type)"/>
-		<param name="use_rosbag"  type="bool" value="$(arg use_rosbag)"/>
-		<param name="frame_id"  type="string" value="$(arg frame_id)"/>
-		<param name="lidar_correction_file"  type="string" value="$(arg lidar_correction_file)"/>
-		<param name="time_shift_threshold"  type="int" value="$(arg time_shift_threshold)"/>
+		<param name="pcap_file" value="$(arg pcap_file)"/>
+		<param name="lidar_ip" value="$(arg lidar_ip)"/>
+		<param name="lidar_recv_port" value="$(arg lidar_recv_port)"/>
+		<param name="gps_port"  value="$(arg gps_port)"/>
+		<param name="start_angle" value="$(arg start_angle)"/>
+		<param name="lidar_type"  value="$(arg lidar_type)"/>
+		<param name="pcldata_type"  value="$(arg pcldata_type)"/>
+		<param name="timestamp_type"  value="$(arg timestamp_type)"/>
+		<param name="use_rosbag"  value="$(arg use_rosbag)"/>
+		<param name="frame_id"  value="$(arg frame_id)"/>
+		<param name="lidar_correction_file"  value="$(arg lidar_correction_file)"/>
+		<param name="time_shift_threshold" value="$(arg time_shift_threshold)"/>
 	</node>
 </launch>
