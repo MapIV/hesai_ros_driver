@@ -10,6 +10,7 @@
 	<arg name="timestamp_type" default=""/>
 	<arg name="use_rosbag" default="true"/>
 	<arg name="lidar_correction_file"  default=""/>
+	<arg name="time_shift_threshold"  default="10"/>
 
 	<node pkg="hesai_lidar" name="$(anon hesai_lidar)" type="hesai_lidar_node" output="screen" >
 		<param name="pcap_file" type="string" value="$(arg pcap_file)"/>
@@ -22,5 +23,6 @@
 		<param name="timestamp_type"  type="string" value="$(arg timestamp_type)"/>
 		<param name="use_rosbag"  type="bool" value="$(arg use_rosbag)"/>
 		<param name="lidar_correction_file"  type="string" value="$(arg lidar_correction_file)"/>
+		<param name="time_shift_threshold"  type="int" value="$(arg time_shift_threshold)"/>
 	</node>
 </launch>

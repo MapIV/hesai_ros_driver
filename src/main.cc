@@ -15,6 +15,7 @@ private:
   std::string timestamp_type_;
   ros::Subscriber packet_subscriber_;
   bool use_rosbag_;
+  int time_shift_threshold_;
 
 public:
   HesaiLidarClient()
@@ -42,11 +43,24 @@ public:
     private_handle.getParam("pcldata_type", pcl_data_type);
     private_handle.getParam("timestamp_type", timestamp_type_);
     private_handle.param<bool>("use_rosbag", use_rosbag_, false);
+    private_handle.param<int>("time_shift_threshold", time_shift_threshold_, 10);
+
+    time_t utc_now = time(0); // UTC
+    time_t time_diff;
+    struct tm *ptmgm = gmtime(&utc_now); // further convert to GMT presuming now in local
+    time_t gmnow = mktime(ptmgm);
+    time_diff = utc_now - gmnow;
+    if (ptmgm->tm_isdst > 0) {
+      time_diff = time_diff - 60 * 60;
+    }
+
+    int time_zone = static_cast<long int> (time_diff)/3600;
+    ROS_INFO_STREAM(ros::this_node::getName() << " Detected TZ: " << time_zone);
 
     if (!pcap_file.empty())
     {
       pandar_sdk_ptr_ = new PandarGeneralSDK(pcap_file, boost::bind(&HesaiLidarClient::lidarCallback, this, _1, _2, _3), \
-      static_cast<int>(start_angle * 100 + 0.5), 0, pcl_data_type, lidar_type, timestamp_type_);
+      static_cast<int>(start_angle * 100 + 0.5), time_zone, pcl_data_type, lidar_type, timestamp_type_);
       if (pandar_sdk_ptr_ != NULL && !lidar_correction_file.empty())
       {
         std::ifstream fin(lidar_correction_file);
@@ -69,7 +83,7 @@ public:
                                                (HesaiLidarClient *) this, ros::TransportHints().tcpNoDelay(true));
 
       pandar_sdk_ptr_ = new PandarGeneralSDK("", boost::bind(&HesaiLidarClient::lidarCallback, this, _1, _2, _3), \
-      static_cast<int>(start_angle * 100 + 0.5), 0, pcl_data_type, lidar_type, timestamp_type_);
+      static_cast<int>(start_angle * 100 + 0.5), time_zone, pcl_data_type, lidar_type, timestamp_type_);
       if (pandar_sdk_ptr_ != NULL && !lidar_correction_file.empty())
       {
         std::ifstream fin(lidar_correction_file);
@@ -89,7 +103,7 @@ public:
       packet_publisher_ = global_nh.advertise<hesai_lidar::PandarScan>("pandar_packets", 10);
       pandar_sdk_ptr_ = new PandarGeneralSDK(lidar_ip, lidar_recv_port, gps_port, \
         boost::bind(&HesaiLidarClient::lidarCallback, this, _1, _2, _3), \
-        NULL, static_cast<int>(start_angle * 100 + 0.5), 0, pcl_data_type, lidar_type, timestamp_type_);
+        NULL, static_cast<int>(start_angle * 100 + 0.5), time_zone, pcl_data_type, lidar_type, timestamp_type_);
     }
 
     if (pandar_sdk_ptr_ != NULL)
@@ -109,7 +123,7 @@ public:
     ros::Time sensor_time = ros::Time(timestamp);
     ros::Time sensor_time_ok = resolveHourAmbiguity(sensor_time, system_time);
 
-    if (abs(int(sensor_time_ok.toSec()) - int(system_time.toSec())) < 1)
+    if (abs(int(sensor_time_ok.toSec()) - int(system_time.toSec())) < time_shift_threshold_)
     {
       pcl_conversions::toPCL(ros::Time(sensor_time_ok), cld->header.stamp);
     } else
