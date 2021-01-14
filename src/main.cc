@@ -16,6 +16,7 @@ private:
   ros::Subscriber packet_subscriber_;
   bool use_rosbag_;
   int time_shift_threshold_;
+  std::string frame_id_;
 
 public:
   HesaiLidarClient()
@@ -44,6 +45,7 @@ public:
     private_handle.getParam("timestamp_type", timestamp_type_);
     private_handle.param<bool>("use_rosbag", use_rosbag_, false);
     private_handle.param<int>("time_shift_threshold", time_shift_threshold_, 10);
+    private_handle.param<std::string>("frame_id", frame_id_, lidar_type);
 
     time_t utc_now = time(0); // UTC
     time_t time_diff;
@@ -56,6 +58,7 @@ public:
 
     int time_zone = static_cast<long int> (time_diff)/3600;
     ROS_INFO_STREAM(ros::this_node::getName() << " Detected TZ: " << time_zone);
+
 
     if (!pcap_file.empty())
     {
@@ -136,6 +139,7 @@ public:
 
     sensor_msgs::PointCloud2 output;
     pcl::toROSMsg(*cld, output);
+    output.header.frame_id = frame_id_;
     lidar_publisher_.publish(output);
 
     if (!use_rosbag_)

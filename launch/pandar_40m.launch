@@ -10,6 +10,7 @@
   <arg name="timestamp_type" default=""/>
   <arg name="use_rosbag" default="false"/>
   <arg name="lidar_correction_file"  default=""/>
+  <arg name="frame_id" default="hesai"/>
 
   <include file="$(find hesai_lidar)/launch/hesai_lidar.launch">
     <arg name="pcap_file"  value="$(arg pcap_file)"/>
@@ -21,6 +22,7 @@
     <arg name="pcldata_type" value="$(arg pcldata_type)"/>
     <arg name="timestamp_type" value="$(arg timestamp_type)"/>
     <arg name="use_rosbag" value="$(arg use_rosbag)"/>
+    <arg name="frame_id"  type="string" value="$(arg frame_id)"/>
     <arg name="lidar_correction_file" value="$(arg lidar_correction_file)"/>
   </include>
 
