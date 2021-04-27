@@ -63,7 +63,7 @@ public:
     if (!pcap_file.empty())
     {
       pandar_sdk_ptr_ = new PandarGeneralSDK(pcap_file, boost::bind(&HesaiLidarClient::lidarCallback, this, _1, _2, _3), \
-      static_cast<int>(start_angle * 100 + 0.5), time_zone, pcl_data_type, lidar_type, timestamp_type_);
+      static_cast<int>(start_angle * 100 + 0.5), time_zone, pcl_data_type, lidar_type, frame_id_, timestamp_type_);
       if (pandar_sdk_ptr_ != NULL && !lidar_correction_file.empty())
       {
         std::ifstream fin(lidar_correction_file);
@@ -86,7 +86,7 @@ public:
                                                (HesaiLidarClient *) this, ros::TransportHints().tcpNoDelay(true));
 
       pandar_sdk_ptr_ = new PandarGeneralSDK("", boost::bind(&HesaiLidarClient::lidarCallback, this, _1, _2, _3), \
-      static_cast<int>(start_angle * 100 + 0.5), time_zone, pcl_data_type, lidar_type, timestamp_type_);
+      static_cast<int>(start_angle * 100 + 0.5), time_zone, pcl_data_type, lidar_type, frame_id_, timestamp_type_);
       if (pandar_sdk_ptr_ != NULL && !lidar_correction_file.empty())
       {
         std::ifstream fin(lidar_correction_file);
@@ -103,10 +103,10 @@ public:
       }
     } else
     {
-      packet_publisher_ = global_nh.advertise<hesai_lidar::PandarScan>("pandar_packets", 10);
+      packet_publisher_ = global_nh.advertise<hesai_msgs::PandarScan>("pandar_packets", 10);
       pandar_sdk_ptr_ = new PandarGeneralSDK(lidar_ip, lidar_recv_port, gps_port, \
         boost::bind(&HesaiLidarClient::lidarCallback, this, _1, _2, _3), \
-        NULL, static_cast<int>(start_angle * 100 + 0.5), time_zone, pcl_data_type, lidar_type, timestamp_type_);
+        NULL, static_cast<int>(start_angle * 100 + 0.5), time_zone, pcl_data_type, lidar_type, frame_id_, timestamp_type_);
     }
 
     if (pandar_sdk_ptr_ != NULL)
@@ -118,7 +118,7 @@ public:
     }
   }
 
-  void lidarCallback(boost::shared_ptr<PPointCloud> cld, double timestamp, hesai_lidar::PandarScanPtr scan)
+  void lidarCallback(boost::shared_ptr<PPointCloud> cld, double timestamp, hesai_msgs::PandarScanPtr scan)
   {
     const int HOUR_TO_SEC = 3600;
     ros::Time system_time = ros::Time::now(); // use this to recover the hour
@@ -139,7 +139,7 @@ public:
 
     sensor_msgs::PointCloud2 output;
     pcl::toROSMsg(*cld, output);
-    output.header.frame_id = frame_id_;
+//    output.header.frame_id = frame_id_;
     lidar_publisher_.publish(output);
 
     if (!use_rosbag_)
@@ -150,7 +150,7 @@ public:
 
   }
 
-  void scanCallback(const hesai_lidar::PandarScanPtr scan)
+  void scanCallback(const hesai_msgs::PandarScanPtr scan)
   {
     pandar_sdk_ptr_->PushScanPacket(scan);
   }

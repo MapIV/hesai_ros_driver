@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.5)
 project(hesai_lidar)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 14)
 
-find_package(Boost REQUIRED )
+find_package(Boost REQUIRED)
 find_package(PCL REQUIRED)
 
 find_package(PkgConfig REQUIRED)
@@ -16,22 +16,20 @@ find_package(catkin REQUIRED COMPONENTS
     roslib
     std_msgs
     sensor_msgs
-    message_runtime
     image_transport
     pcl_conversions
-    message_generation
+    hesai_msgs
 )
-add_message_files(
-    FILES
-    PandarPacket.msg
-    PandarScan.msg
-)
-generate_messages(
-  DEPENDENCIES
-  std_msgs
-)
+
 catkin_package(
-    CATKIN_DEPENDS message_runtime
+    CATKIN_DEPENDS
+        roscpp
+        roslib
+        std_msgs
+        sensor_msgs
+        image_transport
+        pcl_conversions
+        hesai_msgs
 )
 
 ###PandarGeneralRaw
@@ -53,7 +51,7 @@ target_link_libraries(PandarGeneral
     ${PCL_IO_LIBRARIES}
     pcap
 )
-add_dependencies(PandarGeneral ${catkin_EXPORTED_TARGETS} hesai_lidar_generate_messages_cpp)
+add_dependencies(PandarGeneral ${catkin_EXPORTED_TARGETS})
 
 ###PandarGeneralSDK
 add_library(PandarGeneralSDK SHARED
@@ -81,7 +79,7 @@ target_link_libraries(PandarGeneralSDK
     pcap
 )
 
-add_dependencies(PandarGeneralSDK ${catkin_EXPORTED_TARGETS} hesai_lidar_generate_messages_cpp)
+add_dependencies(PandarGeneralSDK ${catkin_EXPORTED_TARGETS})
 
 ###hesai node
 add_executable(hesai_lidar_node

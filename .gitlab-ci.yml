@@ -1,7 +1,7 @@
 stages:
   - build
 
-test_build:
+melodic_build:
   stage: build
   image: ros:melodic-perception
   script:
@@ -11,3 +11,15 @@ test_build:
     - mkdir -p src_tmp/$CI_PROJECT_NAME && mv `find -maxdepth 1 -not -name . -not -name src_tmp` src_tmp/$CI_PROJECT_NAME && mv src_tmp src
     - rosdep install -y --from-paths src --ignore-src --rosdistro $ROS_DISTRO
     - catkin --force-color build
+
+noetic_build:
+  stage: build
+  image: ros:noetic-perception
+  script:
+    - apt-get update
+    - apt-get install -y python3-colcon-common-extensions
+    - rosdep update
+    - mkdir -p src_tmp/$CI_PROJECT_NAME && mv `find -maxdepth 1 -not -name . -not -name src_tmp` src_tmp/$CI_PROJECT_NAME && mv src_tmp src
+    - rosdep install -y --from-paths src --ignore-src --rosdistro $ROS_DISTRO
+    - colcon build
+
