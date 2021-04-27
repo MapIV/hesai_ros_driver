@@ -19,4 +19,5 @@
   <depend>image_transport</depend>
   <depend>pcl_conversions</depend>
   <depend>libpcap</depend>
+  <depend>hesai_msgs</depend>
 </package>

@@ -29,6 +29,7 @@ catkin_package(
         sensor_msgs
         image_transport
         pcl_conversions
+        hesai_msgs
 )
 
 ###PandarGeneralRaw
