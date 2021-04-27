@@ -26,10 +26,11 @@
 #include <vector>
 
 #include <boost/function.hpp>
+#include <boost/thread.hpp>
 
 #include "pandarGeneral/pandarGeneral.h"
 #include "pandarGeneral/point_types.h"
-#include "hesai_lidar/PandarScan.h"
+#include "hesai_msgs/PandarScan.h"
 
 //class PandarGeneralSDK_Internal;
 
@@ -47,10 +48,10 @@ class PandarGeneralSDK {
    */
   PandarGeneralSDK(
       std::string device_ip, const uint16_t lidar_port, const uint16_t gps_port,
-      boost::function<void(boost::shared_ptr<PPointCloud>, double, hesai_lidar::PandarScanPtr)>
+      boost::function<void(boost::shared_ptr<PPointCloud>, double, hesai_msgs::PandarScanPtr)>
           pcl_callback,
       boost::function<void(double)> gps_callback, uint16_t start_angle,
-      int tz, int pcl_type, std::string frame_id, std::string timestampType); // the default timestamp type is LiDAR time
+      int tz, int pcl_type, std::string lidar_type, std::string frame_id, std::string timestampType); // the default timestamp type is LiDAR time
   /**
    * @brief Constructor
    * @param pcap_path         The path of pcap file
@@ -61,8 +62,8 @@ class PandarGeneralSDK {
    *        frame_id          The frame id of point cloud
    */
   PandarGeneralSDK(std::string pcap_path, \
-      boost::function<void(boost::shared_ptr<PPointCloud>, double, hesai_lidar::PandarScanPtr)> pcl_callback, \
-      uint16_t start_angle, int tz, int pcl_type, std::string frame_id, std::string timestampType); // the default timestamp type is LiDAR time
+      boost::function<void(boost::shared_ptr<PPointCloud>, double, hesai_msgs::PandarScanPtr)> pcl_callback, \
+      uint16_t start_angle, int tz, int pcl_type, std::string lidar_type, std::string frame_id, std::string timestampType); // the default timestamp type is LiDAR time
   ~PandarGeneralSDK();
 
   /**
@@ -75,7 +76,7 @@ class PandarGeneralSDK {
   void GetCalibrationFromDevice();
   int Start();
   void Stop();
-  void PushScanPacket(hesai_lidar::PandarScanPtr scan);
+  void PushScanPacket(hesai_msgs::PandarScanPtr scan);
 
  private:
   PandarGeneral *pandarGeneral_;
