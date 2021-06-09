@@ -12,6 +12,7 @@
 	<arg name="lidar_correction_file"  default=""/>
 	<arg name="time_shift_threshold"  default="10"/>
 	<arg name="frame_id" default="hesai"/>
+	<env name="TZ" value="9"/>
 
 	<node pkg="hesai_lidar" name="$(anon hesai_lidar)" type="hesai_lidar_node" output="screen" >
 		<param name="pcap_file" value="$(arg pcap_file)"/>

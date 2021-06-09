@@ -47,17 +47,7 @@ public:
     private_handle.param<int>("time_shift_threshold", time_shift_threshold_, 10);
     private_handle.param<std::string>("frame_id", frame_id_, lidar_type);
 
-    time_t utc_now = time(0); // UTC
-    time_t time_diff;
-    struct tm *ptmgm = gmtime(&utc_now); // further convert to GMT presuming now in local
-    time_t gmnow = mktime(ptmgm);
-    time_diff = utc_now - gmnow;
-    if (ptmgm->tm_isdst > 0) {
-      time_diff = time_diff - 60 * 60;
-    }
-
-    int time_zone = static_cast<long int> (time_diff)/3600;
-    ROS_INFO_STREAM(ros::this_node::getName() << " Detected TZ: " << time_zone);
+    int time_zone = 0;
 
 
     if (!pcap_file.empty())
