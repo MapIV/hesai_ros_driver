@@ -78,14 +78,14 @@ static const float pandar20_horizatal_azimuth_offset_map[] = {
   -1.042f, -1.042f, -1.042f, -1.042f
 };
 
-static std::vector<std::vector<PPoint> > PointCloudList(MAX_LASER_NUM);
-// static std::vector<PPoint> PointCloud;
-static std::vector<PPoint> PointCloud(MAX_POINT_CLOUD_NUM);
+static std::vector<std::vector<PPointXYZIRADT> > PointCloudList(MAX_LASER_NUM);
+// static std::vector<PPointXYZIRADT> PointCloud;
+static std::vector<PPointXYZIRADT> PointCloud(MAX_POINT_CLOUD_NUM);
 static int iPointCloudIndex = 0;
 
 PandarGeneral_Internal::PandarGeneral_Internal(
     std::string device_ip, uint16_t lidar_port, uint16_t gps_port,
-    boost::function<void(boost::shared_ptr<PPointCloud>, double, hesai_msgs::PandarScanPtr)> pcl_callback,
+    boost::function<void(boost::shared_ptr<PPointCloudXYZIRADT>, double, hesai_msgs::PandarScanPtr)> pcl_callback,
     boost::function<void(double)> gps_callback, uint16_t start_angle, int tz,
     int pcl_type, std::string lidar_type, std::string frame_id, std::string timestampType) {
       // LOG_FUNC();
@@ -117,7 +117,7 @@ PandarGeneral_Internal::PandarGeneral_Internal(
 }
 
 PandarGeneral_Internal::PandarGeneral_Internal(std::string pcap_path, \
-    boost::function<void(boost::shared_ptr<PPointCloud>, double, hesai_msgs::PandarScanPtr)> \
+    boost::function<void(boost::shared_ptr<PPointCloudXYZIRADT>, double, hesai_msgs::PandarScanPtr)> \
     pcl_callback, uint16_t start_angle, int tz, int pcl_type, \
     std::string lidar_type, std::string frame_id, std::string timestampType) {
   pthread_mutex_init(&lidar_lock_, NULL);
@@ -668,7 +668,7 @@ void PandarGeneral_Internal::ProcessLiarPacket() {
   struct timespec ts;
   int ret = 0;
 
-  boost::shared_ptr<PPointCloud> outMsg(new PPointCloud());
+  boost::shared_ptr<PPointCloudXYZIRADT> outMsg(new PPointCloudXYZIRADT());
   hesai_msgs::PandarScanPtr scan(new hesai_msgs::PandarScan);
   hesai_msgs::PandarPacket rawpacket;
 
@@ -1287,7 +1287,7 @@ int PandarGeneral_Internal::ParseGPS(PandarGPS *packet, const uint8_t *recvbuf, 
 }
 
 void PandarGeneral_Internal::CalcPointXYZIT(Pandar40PPacket *pkt, int blockid,
-                                        boost::shared_ptr<PPointCloud> cld) {
+                                        boost::shared_ptr<PPointCloudXYZIRADT> cld) {
   Pandar40PBlock *block = &pkt->blocks[blockid];
 
   double unix_second =
@@ -1296,7 +1296,7 @@ void PandarGeneral_Internal::CalcPointXYZIT(Pandar40PPacket *pkt, int blockid,
   for (int i = 0; i < LASER_COUNT; ++i) {
     /* for all the units in a block */
     Pandar40PUnit &unit = block->units[i];
-    PPoint point;
+    PPointXYZIRADT point;
 
     /* skip wrong points */
     if (unit.distance <= 0.1 || unit.distance > 200.0) {
@@ -1312,23 +1312,24 @@ void PandarGeneral_Internal::CalcPointXYZIT(Pandar40PPacket *pkt, int blockid,
     point.x = static_cast<float>(xyDistance * m_sin_azimuth_map_[azimuth]);
     point.y = static_cast<float>(xyDistance * m_cos_azimuth_map_[azimuth]);
     point.z = static_cast<float>(unit.distance * m_sin_elevation_map_[i]);
-
+    point.azimuth = azimuth;
+    point.distance = unit.distance;
     point.intensity = unit.intensity;
 
     if ("realtime" == m_sTimestampType) {
-      point.timestamp = m_dPktTimestamp;
+      point.time_stamp = m_dPktTimestamp;
     }
     else {
-      point.timestamp = unix_second + \
+      point.time_stamp = unix_second + \
         (static_cast<double>(pkt->usec)) / 1000000.0;
 
       if (pkt->echo == 0x39) {
         // dual return, block 0&1 (2&3 , 4*5 ...)'s timestamp is the same.
-        point.timestamp = point.timestamp - \
+        point.time_stamp = point.time_stamp - \
             (static_cast<double>(block40OffsetDual_[blockid] + \
             laser40Offset_[i]) / 1000000.0f);
       } else {
-        point.timestamp = point.timestamp - \
+        point.time_stamp = point.time_stamp - \
             (static_cast<double>(block40OffsetSingle_[blockid] + \
             laser40Offset_[i]) / 1000000.0f);
       }
@@ -1346,7 +1347,7 @@ void PandarGeneral_Internal::CalcPointXYZIT(Pandar40PPacket *pkt, int blockid,
 }
 
 void PandarGeneral_Internal::CalcL64PointXYZIT(HS_LIDAR_L64_Packet *pkt, int blockid, \
-    char chLaserNumber, boost::shared_ptr<PPointCloud> cld) {
+    char chLaserNumber, boost::shared_ptr<PPointCloudXYZIRADT> cld) {
   HS_LIDAR_L64_Block *block = &pkt->blocks[blockid];
 
   struct tm tTm = {0};
@@ -1373,7 +1374,7 @@ void PandarGeneral_Internal::CalcL64PointXYZIT(HS_LIDAR_L64_Packet *pkt, int blo
   for (int i = 0; i < chLaserNumber; ++i) {
     /* for all the units in a block */
     HS_LIDAR_L64_Unit &unit = block->units[i];
-    PPoint point;
+    PPointXYZIRADT point;
 
     /* skip wrong points */
     if (unit.distance <= 0.1 || unit.distance > 200.0) {
@@ -1389,24 +1390,25 @@ void PandarGeneral_Internal::CalcL64PointXYZIT(HS_LIDAR_L64_Packet *pkt, int blo
     point.x = static_cast<float>(xyDistance * m_sin_azimuth_map_[azimuth]);
     point.y = static_cast<float>(xyDistance * m_cos_azimuth_map_[azimuth]);
     point.z = static_cast<float>(unit.distance * m_sin_elevation_map_[i]);
-
+    point.azimuth = azimuth;
+    point.distance = unit.distance;
     point.intensity = unit.intensity;
 
     if ("realtime" == m_sTimestampType) {
-      point.timestamp = m_dPktTimestamp;
+      point.time_stamp = m_dPktTimestamp;
     }
     else {
-      point.timestamp = \
+      point.time_stamp = \
         unix_second + (static_cast<double>(pkt->timestamp)) / 1000000.0;
 
       if (pkt->echo == 0x39) {
         // dual return, block 0&1 (2&3 , 4*5 ...)'s timestamp is the same.
-        point.timestamp =
-            point.timestamp - (static_cast<double>(block64OffsetDual_[blockid] +
+        point.time_stamp =
+            point.time_stamp - (static_cast<double>(block64OffsetDual_[blockid] +
                                                   laser64Offset_[i]) /
                               1000000.0f);
       } else {
-        point.timestamp = point.timestamp - \
+        point.time_stamp = point.time_stamp - \
             (static_cast<double>(block64OffsetSingle_[blockid] + laser64Offset_[i]) / \
             1000000.0f);
       }
@@ -1424,7 +1426,7 @@ void PandarGeneral_Internal::CalcL64PointXYZIT(HS_LIDAR_L64_Packet *pkt, int blo
 }
 
 void PandarGeneral_Internal::CalcL20PointXYZIT(HS_LIDAR_L20_Packet *pkt, int blockid, \
-    char chLaserNumber, boost::shared_ptr<PPointCloud> cld) {
+    char chLaserNumber, boost::shared_ptr<PPointCloudXYZIRADT> cld) {
   HS_LIDAR_L20_Block *block = &pkt->blocks[blockid];
 
   struct tm tTm = {0};
@@ -1451,7 +1453,7 @@ void PandarGeneral_Internal::CalcL20PointXYZIT(HS_LIDAR_L20_Packet *pkt, int blo
   for (int i = 0; i < chLaserNumber; ++i) {
     /* for all the units in a block */
     HS_LIDAR_L20_Unit &unit = block->units[i];
-    PPoint point;
+    PPointXYZIRADT point;
 
     /* skip wrong points */
     if (unit.distance <= 0.1 || unit.distance > 200.0) {
@@ -1467,34 +1469,35 @@ void PandarGeneral_Internal::CalcL20PointXYZIT(HS_LIDAR_L20_Packet *pkt, int blo
     point.x = static_cast<float>(xyDistance * m_sin_azimuth_map_[azimuth]);
     point.y = static_cast<float>(xyDistance * m_cos_azimuth_map_[azimuth]);
     point.z = static_cast<float>(unit.distance * m_sin_elevation_map_[i]);
-
+    point.azimuth = azimuth;
+    point.distance = unit.distance;
     point.intensity = unit.intensity;
 
     if ("realtime" == m_sTimestampType) {
-      point.timestamp = m_dPktTimestamp;
+      point.time_stamp = m_dPktTimestamp;
     }
     else {
-      point.timestamp = unix_second + \
+      point.time_stamp = unix_second + \
         (static_cast<double>(pkt->timestamp)) / 1000000.0;
 
       if (pkt->echo == 0x39) {
         // dual return, block 0&1 (2&3 , 4*5 ...)'s timestamp is the same.
         if (strcmp(m_sLidarType.c_str(), "Pandar20A") == 0) {
-          point.timestamp = point.timestamp - \
+          point.time_stamp = point.time_stamp - \
               (static_cast<double>(block20OffsetDual_[blockid] + \
               laser20AOffset_[i]) / 1000000.0f);
         } else if (strcmp(m_sLidarType.c_str(), "Pandar20B") == 0) {
-          point.timestamp = point.timestamp - \
+          point.time_stamp = point.time_stamp - \
               (static_cast<double>(block20OffsetDual_[blockid] + \
               laser20BOffset_[i]) / 1000000.0f);
         }
       } else {
         if (strcmp(m_sLidarType.c_str(), "Pandar20A") == 0) {
-          point.timestamp = point.timestamp - \
+          point.time_stamp = point.time_stamp - \
               (static_cast<double>(block20OffsetSingle_[blockid] + \
               laser20AOffset_[i]) / 1000000.0f);
         } else if (strcmp(m_sLidarType.c_str(), "Pandar20B") == 0) {
-          point.timestamp = point.timestamp - \
+          point.time_stamp = point.time_stamp - \
               (static_cast<double>(block20OffsetSingle_[blockid] + \
               laser20BOffset_[i]) / 1000000.0f);
         }
@@ -1514,7 +1517,7 @@ void PandarGeneral_Internal::CalcL20PointXYZIT(HS_LIDAR_L20_Packet *pkt, int blo
 
 // QT
 void PandarGeneral_Internal::CalcQTPointXYZIT(HS_LIDAR_QT_Packet *pkt, int blockid, \
-    char chLaserNumber, boost::shared_ptr<PPointCloud> cld) {
+    char chLaserNumber, boost::shared_ptr<PPointCloudXYZIRADT> cld) {
   HS_LIDAR_QT_Block *block = &pkt->blocks[blockid];
 
   struct tm tTm = {0};
@@ -1539,7 +1542,7 @@ void PandarGeneral_Internal::CalcQTPointXYZIT(HS_LIDAR_QT_Packet *pkt, int block
   for (int i = 0; i < chLaserNumber; ++i) {
     /* for all the units in a block */
     HS_LIDAR_QT_Unit &unit = block->units[i];
-    PPoint point;
+    PPointXYZIRADT point;
 
     /* skip wrong points */
     if (unit.distance <= 0.1 || unit.distance > 200.0) {
@@ -1555,25 +1558,26 @@ void PandarGeneral_Internal::CalcQTPointXYZIT(HS_LIDAR_QT_Packet *pkt, int block
     point.x = static_cast<float>(xyDistance * m_sin_azimuth_map_[azimuth]);
     point.y = static_cast<float>(xyDistance * m_cos_azimuth_map_[azimuth]);
     point.z = static_cast<float>(unit.distance * m_sin_elevation_map_[i]);
-
+    point.azimuth = azimuth;
+    point.distance = unit.distance;
     point.intensity = unit.intensity;
 
     if ("realtime" == m_sTimestampType) {
-      point.timestamp = m_dPktTimestamp;
+      point.time_stamp = m_dPktTimestamp;
     }
     else {
-      point.timestamp = unix_second + \
+      point.time_stamp = unix_second + \
         (static_cast<double>(pkt->timestamp)) / 1000000.0;
 
       if (pkt->echo == 0x05) {
         // dual return, block 0&1 (2&3 , 4*5 ...)'s timestamp is the same.
         // dual:0x05, single:0x00
-        point.timestamp =
-            point.timestamp + (static_cast<double>(blockQTOffsetDual_[blockid] +
+        point.time_stamp =
+            point.time_stamp + (static_cast<double>(blockQTOffsetDual_[blockid] +
                                                   laserQTOffset_[i]) /
                               1000000.0f);
       } else {
-        point.timestamp = point.timestamp + \
+        point.time_stamp = point.time_stamp + \
             (static_cast<double>(blockQTOffsetSingle_[blockid] + laserQTOffset_[i]) / \
             1000000.0f);
       }
@@ -1589,7 +1593,7 @@ void PandarGeneral_Internal::CalcQTPointXYZIT(HS_LIDAR_QT_Packet *pkt, int block
 }
 
 void PandarGeneral_Internal::CalcXTPointXYZIT(HS_LIDAR_XT_Packet *pkt, int blockid, \
-    char chLaserNumber, boost::shared_ptr<PPointCloud> cld) {
+    char chLaserNumber, boost::shared_ptr<PPointCloudXYZIRADT> cld) {
   HS_LIDAR_XT_Block *block = &pkt->blocks[blockid];
 
   struct tm tTm = {0};
@@ -1614,7 +1618,7 @@ void PandarGeneral_Internal::CalcXTPointXYZIT(HS_LIDAR_XT_Packet *pkt, int block
   for (int i = 0; i < chLaserNumber; ++i) {
     /* for all the units in a block */
     HS_LIDAR_XT_Unit &unit = block->units[i];
-    PPoint point;
+    PPointXYZIRADT point;
 
     /* skip wrong points */
     if (unit.distance <= 0.1 || unit.distance > 200.0) {
@@ -1630,23 +1634,24 @@ void PandarGeneral_Internal::CalcXTPointXYZIT(HS_LIDAR_XT_Packet *pkt, int block
     point.x = static_cast<float>(xyDistance * m_sin_azimuth_map_[azimuth]);
     point.y = static_cast<float>(xyDistance * m_cos_azimuth_map_[azimuth]);
     point.z = static_cast<float>(unit.distance * m_sin_elevation_map_[i]);
-
+    point.azimuth = azimuth;
+    point.distance = unit.distance;
     point.intensity = unit.intensity;
 
     if ("realtime" == m_sTimestampType) {
-      point.timestamp = m_dPktTimestamp;
+      point.time_stamp = m_dPktTimestamp;
     }
     else {
-      point.timestamp = unix_second + \
+      point.time_stamp = unix_second + \
         (static_cast<double>(pkt->timestamp)) / 1000000.0;
 
       if (pkt->echo == 0x39) {
-        point.timestamp =
-            point.timestamp + (static_cast<double>(blockXTOffsetDual_[blockid] +
+        point.time_stamp =
+            point.time_stamp + (static_cast<double>(blockXTOffsetDual_[blockid] +
                                                   laserXTOffset_[i]) /
                               1000000.0f);
       } else {
-        point.timestamp = point.timestamp + \
+        point.time_stamp = point.time_stamp + \
             (static_cast<double>(blockXTOffsetSingle_[blockid] + laserXTOffset_[i]) / \
             1000000.0f);
       }
@@ -1662,7 +1667,7 @@ void PandarGeneral_Internal::CalcXTPointXYZIT(HS_LIDAR_XT_Packet *pkt, int block
   }
 }
 
-void PandarGeneral_Internal::EmitBackMessege(char chLaserNumber, boost::shared_ptr<PPointCloud> cld, hesai_msgs::PandarScanPtr scan) {
+void PandarGeneral_Internal::EmitBackMessege(char chLaserNumber, boost::shared_ptr<PPointCloudXYZIRADT> cld, hesai_msgs::PandarScanPtr scan) {
   if (pcl_type_) {
     for (int i=0; i<chLaserNumber; i++) {
       for (int j=0; j<PointCloudList[i].size(); j++) {
@@ -1676,7 +1681,7 @@ void PandarGeneral_Internal::EmitBackMessege(char chLaserNumber, boost::shared_p
     cld->height = 1;
     iPointCloudIndex = 0;
   }
-  pcl_callback_(cld, cld->points[0].timestamp, scan); // the timestamp from first point cloud of cld
+  pcl_callback_(cld, cld->points[0].time_stamp, scan); // the timestamp from first point cloud of cld
   if (pcl_type_) {
     for (int i=0; i<chLaserNumber; i++) {
       PointCloudList[i].clear();
