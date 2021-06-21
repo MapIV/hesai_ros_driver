@@ -129,8 +129,7 @@ public:
     }
 
     boost::shared_ptr<PPointCloudXYZIR> out_cld_raw(boost::make_shared<PPointCloudXYZIR>());
-    out_cld_raw->points.reserve(cld_ex->points.size());
-
+    out_cld_raw->points.resize(cld_ex->points.size());
     for (size_t i = 0; i < cld_ex->points.size(); i++) {
       out_cld_raw->points[i].x = cld_ex->points[i].x;
       out_cld_raw->points[i].y = cld_ex->points[i].y;
