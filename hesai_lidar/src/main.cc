@@ -109,18 +109,6 @@ public:
     }
   }
 
-  static void generateNonExCloud(const boost::shared_ptr<PPointCloudXYZIRADT>& cld_ex,
-                                 boost::shared_ptr<PPointCloudXYZIR>& out_cld_raw)
-  {
-    out_cld_raw->points.reserve(cld_ex->points.size());
-
-    for (size_t i = 0; i < cld_ex->points.size(); i++) {
-      out_cld_raw->points[i].x = cld_ex->points[i].x;
-      out_cld_raw->points[i].y = cld_ex->points[i].y;
-      out_cld_raw->points[i].z = cld_ex->points[i].z;
-    }
-  }
-
   void lidarCallback(boost::shared_ptr<PPointCloudXYZIRADT> cld_ex, double timestamp, hesai_msgs::PandarScanPtr scan)
   {
     const int HOUR_TO_SEC = 3600;
@@ -141,7 +129,13 @@ public:
     }
 
     boost::shared_ptr<PPointCloudXYZIR> out_cld_raw(boost::make_shared<PPointCloudXYZIR>());
-    generateNonExCloud(cld_ex, out_cld_raw);
+    out_cld_raw->points.reserve(cld_ex->points.size());
+
+    for (size_t i = 0; i < cld_ex->points.size(); i++) {
+      out_cld_raw->points[i].x = cld_ex->points[i].x;
+      out_cld_raw->points[i].y = cld_ex->points[i].y;
+      out_cld_raw->points[i].z = cld_ex->points[i].z;
+    }
 
     //convert to ROS
     boost::shared_ptr<sensor_msgs::PointCloud2> output_ex(boost::make_shared<sensor_msgs::PointCloud2>());
@@ -149,7 +143,7 @@ public:
 
     pcl::toROSMsg(*cld_ex, *output_ex);
     pcl::toROSMsg(*out_cld_raw, *output_raw);
-    output_raw->header.frame_id = frame_id_;
+    output_raw->header = output_ex->header;
     lidar_publisher_ex_.publish(output_ex);
     lidar_publisher_.publish(output_raw);
 
