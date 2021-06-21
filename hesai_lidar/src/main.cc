@@ -148,7 +148,8 @@ public:
     boost::shared_ptr<sensor_msgs::PointCloud2> output_raw(boost::make_shared<sensor_msgs::PointCloud2>());
 
     pcl::toROSMsg(*cld_ex, *output_ex);
-    pcl::toROSMsg(*cld_ex, *output_ex);
+    pcl::toROSMsg(*out_cld_raw, *output_raw);
+    output_raw->header.frame_id = frame_id_;
     lidar_publisher_ex_.publish(output_ex);
     lidar_publisher_.publish(output_raw);
 
