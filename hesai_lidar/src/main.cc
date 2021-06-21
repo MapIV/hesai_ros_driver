@@ -134,6 +134,8 @@ public:
       out_cld_raw->points[i].x = cld_ex->points[i].x;
       out_cld_raw->points[i].y = cld_ex->points[i].y;
       out_cld_raw->points[i].z = cld_ex->points[i].z;
+      out_cld_raw->points[i].ring = cld_ex->points[i].ring;
+      out_cld_raw->points[i].intensity = cld_ex->points[i].intensity;
     }
 
     //convert to ROS
