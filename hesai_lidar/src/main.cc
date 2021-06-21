@@ -9,7 +9,7 @@
 class HesaiLidarClient
 {
 private:
-  ros::Publisher lidar_publisher_;
+  ros::Publisher lidar_publisher_, lidar_publisher_ex_;
   ros::Publisher packet_publisher_;
   PandarGeneralSDK *pandar_sdk_ptr_;
   std::string timestamp_type_;
@@ -24,6 +24,7 @@ public:
     ros::NodeHandle private_handle("~");
     ros::NodeHandle global_nh;
     lidar_publisher_ = global_nh.advertise<sensor_msgs::PointCloud2>("points_raw", 10);
+    lidar_publisher_ex_ = global_nh.advertise<sensor_msgs::PointCloud2>("points_raw_ex", 10);
 
     std::string lidar_ip;
     int lidar_recv_port;
@@ -108,7 +109,19 @@ public:
     }
   }
 
-  void lidarCallback(boost::shared_ptr<PPointCloud> cld, double timestamp, hesai_msgs::PandarScanPtr scan)
+  static void generateNonExCloud(const boost::shared_ptr<PPointCloudXYZIRADT>& cld_ex,
+                                 boost::shared_ptr<PPointCloudXYZIR>& out_cld_raw)
+  {
+    out_cld_raw->points.reserve(cld_ex->points.size());
+
+    for (size_t i = 0; i < cld_ex->points.size(); i++) {
+      out_cld_raw->points[i].x = cld_ex->points[i].x;
+      out_cld_raw->points[i].y = cld_ex->points[i].y;
+      out_cld_raw->points[i].z = cld_ex->points[i].z;
+    }
+  }
+
+  void lidarCallback(boost::shared_ptr<PPointCloudXYZIRADT> cld_ex, double timestamp, hesai_msgs::PandarScanPtr scan)
   {
     const int HOUR_TO_SEC = 3600;
     ros::Time system_time = ros::Time::now(); // use this to recover the hour
@@ -118,23 +131,30 @@ public:
 
     if (abs(int(sensor_time_ok.toSec()) - int(system_time.toSec())) < time_shift_threshold_)
     {
-      pcl_conversions::toPCL(ros::Time(sensor_time_ok), cld->header.stamp);
+      pcl_conversions::toPCL(ros::Time(sensor_time_ok), cld_ex->header.stamp);
     } else
     {
-      pcl_conversions::toPCL(ros::Time(system_time), cld->header.stamp);
+      pcl_conversions::toPCL(ros::Time(system_time), cld_ex->header.stamp);
       ROS_WARN_STREAM_THROTTLE(10, ros::this_node::getName()
         << " | Using system time. Large Time difference between device and system. Sensor:"
         << sensor_time_ok << " System:" << system_time << ". Check clock source (GPS/PTP)");
     }
 
-    sensor_msgs::PointCloud2 output;
-    pcl::toROSMsg(*cld, output);
-//    output.header.frame_id = frame_id_;
-    lidar_publisher_.publish(output);
+    boost::shared_ptr<PPointCloudXYZIR> out_cld_raw(boost::make_shared<PPointCloudXYZIR>());
+    generateNonExCloud(cld_ex, out_cld_raw);
+
+    //convert to ROS
+    boost::shared_ptr<sensor_msgs::PointCloud2> output_ex(boost::make_shared<sensor_msgs::PointCloud2>());
+    boost::shared_ptr<sensor_msgs::PointCloud2> output_raw(boost::make_shared<sensor_msgs::PointCloud2>());
+
+    pcl::toROSMsg(*cld_ex, *output_ex);
+    pcl::toROSMsg(*cld_ex, *output_ex);
+    lidar_publisher_ex_.publish(output_ex);
+    lidar_publisher_.publish(output_raw);
 
     if (!use_rosbag_)
     {
-      scan->header = output.header;
+      scan->header = output_ex->header;
       packet_publisher_.publish(scan);
     }
 
